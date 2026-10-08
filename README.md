@@ -19,47 +19,79 @@
 | WebDAV 加密备份 | 客户端加密后经服务器哑管道上传到你的网盘 |
 | 谷歌 OAuth 登录 | 仅用于身份验证；与数据加密完全无关 |
 
-## 🚀 一键懒人部署（推荐）
+## 🚀 部署
 
-在任意 Linux 服务器（amd64/arm64 均可）上执行一条命令，脚本会自动完成：安装 Docker → 克隆配置 → 从 GHCR 拉取官方镜像 → 启动 → 健康检查：
+环境要求：任意能跑 Docker 的 Linux 服务器（amd64/arm64 均可），1 核 512MB 起步。
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/famliyroy/fairy-notes/main/install.sh | bash
-```
-
-支持环境变量微调：`APP_DIR=/opt/fairy-notes PORT=9000` 加在同一命令前即可。
-
-也可以手动网络拉取部署（无需克隆源码）：
+### 方式一：docker compose 部署（推荐）
 
 ```bash
 mkdir fairy-notes && cd fairy-notes
 curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/famliyroy/fairy-notes/main/docker-compose.yml
 curl -fsSL -o .env.example https://raw.githubusercontent.com/famliyroy/fairy-notes/main/.env.example
-cp .env.example .env   # 按需编辑
+cp .env.example .env          # 按需编辑：谷歌 OAuth 客户端 ID（可选）
 docker compose pull && docker compose up -d
 ```
 
-## 一键部署（本地构建方式）
-
-环境要求：任意能跑 Docker 的 Linux x86_64/ARM64 服务器，1 核 512MB 起步。
+### 方式二：docker run 一条命令部署
 
 ```bash
-# 1. 克隆/上传本目录到服务器
-cd fairy-notes
-cp .env.example .env
-
-# 2. （可选）编辑 .env 填入谷歌 OAuth 客户端 ID
-#    ⚠️ 合规提醒：谷歌服务接入请遵循谷歌官方开发文档，
-#    在中国境内使用涉及谷歌的服务需遵守中国相关法律法规。
-vi .env
-
-# 3. 构建并启动
-docker compose up -d --build
-
-# 4. 打开 http://<服务器IP>:8080
+docker run -d \
+  --name fairynotes \
+  --restart unless-stopped \
+  -p 8080:8080 \
+  -e DB_PATH=/data/fairy-notes.db \
+  -v fairynotes-data:/data \
+  ghcr.io/famliyroy/fairy-notes:latest
 ```
 
-数据持久化在 Docker 卷 `fairynotes-data` 中（SQLite 数据库文件）。升级：`git pull && docker compose up -d --build`（数据不受影响）。备份服务器：直接备份该卷即可（里面全是密文）。
+镜像托管在 GitHub Container Registry，由 CI 自动构建（amd64 / arm64），无需本机构建。
+
+可选环境变量：
+
+| 变量 | 说明 |
+|---|---|
+| `GOOGLE_CLIENT_ID` | 谷歌 OAuth 客户端 ID（可选；不填可用开发模式登录） |
+| `ALLOW_DEV_AUTH` | 开发模式登录，**生产环境必须保持 0 或不设置** |
+
+> ⚠️ 合规提醒：谷歌服务接入请遵循谷歌官方开发文档，在中国境内使用涉及谷歌的服务需遵守中国相关法律法规。
+
+### 方式二·补：宝塔 / 1Panel 面板（host 网络模式）
+
+宝塔、1Panel 等面板的 Docker 管理支持直接粘贴 docker-compose 运行。这类场景推荐用 host 网络模式：端口由 `PORT` 环境变量决定，无需端口映射，也不会出现端口冲突。仓库内已附带 `docker-compose.host.yml`，内容如下，可直接复制到面板的 compose 编辑器运行：
+
+```yaml
+services:
+  fairynotes:
+    image: ghcr.io/famliyroy/fairy-notes:latest
+    container_name: fairynotes
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PORT=8080                        # 对外端口，host 模式下即容器监听端口
+      - GOOGLE_CLIENT_ID=                # 谷歌 OAuth 客户端 ID（可选，不影响加密）
+      - ALLOW_DEV_AUTH=0                 # 开发模式登录，生产环境【必须】为 0！
+      - DB_PATH=/data/fairy-notes.db     # 数据库文件位置（数据卷内）
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const p=process.env.PORT||8080;fetch('http://localhost:'+p+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+```
+
+注意：host 网络模式仅适用于 Linux 服务器；Mac/Windows 的 Docker Desktop 不支持。改端口只需改 `PORT` 的值。
+
+### 数据与升级
+
+数据持久化在 Docker 卷 `fairynotes-data`（compose/host 模式为 `./data` 目录），里面全是密文，可整卷/整目录备份。升级：
+
+```bash
+docker compose pull && docker compose up -d     # compose 方式
+docker pull ghcr.io/famliyroy/fairy-notes:latest && docker restart fairynotes   # docker run 方式
+```
 
 ### 本地开发（无 Docker）
 
@@ -84,13 +116,11 @@ ALLOW_DEV_AUTH=1 npm start      # 开发模式登录仅限本机测试！
 
 ## 📱 安卓 APP
 
-**方式一（推荐）：GitHub Actions 云构建，零本地依赖**
+**直接下载安装（推荐）**：到 [Releases 页面](https://github.com/famliyroy/fairy-notes/releases) 下载 APK，安装后在登录页填写你的服务器地址即可——密钥派生与解密全部在手机本地完成。每次打 `v*` 标签，CI 会自动构建新 APK 并发 Release。
 
-推送代码后 CI 自动打包 APK：
-- 手动触发：仓库页 Actions → Build Android APK → Run workflow
-- 正式发布：推送 `v1.0.0` 这样的 tag，自动创建 Release 并附上 APK
+**CI 手动构建**：仓库页 Actions → Build Android APK → Run workflow，产物在构建详情页下载。
 
-**方式二：本地构建**（需 Android Studio + JDK 17）
+**本地构建**（需 Android Studio + JDK 17）：
 
 ```bash
 npm install

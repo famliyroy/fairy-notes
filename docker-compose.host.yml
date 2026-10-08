@@ -1,0 +1,26 @@
+# ============================================================
+# FairyNotes — 宝塔 / 1Panel 面板专用编排（host 网络模式）
+# 直接把本文件内容粘贴到面板的 Compose 编辑器运行即可。
+# 注意：host 网络模式仅适用于 Linux 服务器；
+#       Mac/Windows 的 Docker Desktop 不支持。
+# 端口由 PORT 环境变量决定，改端口只需改 PORT 的值。
+# ============================================================
+services:
+  fairynotes:
+    image: ghcr.io/famliyroy/fairy-notes:latest
+    container_name: fairynotes
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PORT=8080                        # 对外端口，host 模式下即容器监听端口
+      - GOOGLE_CLIENT_ID=                # 谷歌 OAuth 客户端 ID（可选，不影响加密）
+      - ALLOW_DEV_AUTH=0                 # 开发模式登录，生产环境【必须】为 0！
+      - DB_PATH=/data/fairy-notes.db     # 数据库文件位置（数据卷内）
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const p=process.env.PORT||8080;fetch('http://localhost:'+p+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
