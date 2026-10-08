@@ -19,7 +19,27 @@
 | WebDAV 加密备份 | 客户端加密后经服务器哑管道上传到你的网盘 |
 | 谷歌 OAuth 登录 | 仅用于身份验证；与数据加密完全无关 |
 
-## 一键部署（Docker）
+## 🚀 一键懒人部署（推荐）
+
+在任意 Linux 服务器（amd64/arm64 均可）上执行一条命令，脚本会自动完成：安装 Docker → 克隆配置 → 从 GHCR 拉取官方镜像 → 启动 → 健康检查：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/famliyroy/fairy-notes/main/install.sh | bash
+```
+
+支持环境变量微调：`APP_DIR=/opt/fairy-notes PORT=9000` 加在同一命令前即可。
+
+也可以手动网络拉取部署（无需克隆源码）：
+
+```bash
+mkdir fairy-notes && cd fairy-notes
+curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/famliyroy/fairy-notes/main/docker-compose.yml
+curl -fsSL -o .env.example https://raw.githubusercontent.com/famliyroy/fairy-notes/main/.env.example
+cp .env.example .env   # 按需编辑
+docker compose pull && docker compose up -d
+```
+
+## 一键部署（本地构建方式）
 
 环境要求：任意能跑 Docker 的 Linux x86_64/ARM64 服务器，1 核 512MB 起步。
 
