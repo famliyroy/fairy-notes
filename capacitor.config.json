@@ -1,0 +1,8 @@
+{
+  "appId": "com.fairynotes.app",
+  "appName": "FairyNotes",
+  "webDir": "web",
+  "android": {
+    "allowMixedContent": true
+  }
+}

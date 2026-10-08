@@ -1,0 +1,12 @@
+{
+  "name": "fairy-notes-server",
+  "version": "1.0.0",
+  "description": "FairyNotes 零知识同步后端 — 只存储密文，不具备任何解密能力",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

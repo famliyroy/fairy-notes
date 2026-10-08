@@ -1,0 +1,17 @@
+{
+  "name": "fairy-notes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FairyNotes — 隐私优先的私有部署多端同步笔记软件",
+  "scripts": {
+    "cap:sync": "npx cap sync android",
+    "android": "npx cap open android"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}

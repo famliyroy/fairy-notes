@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FairyNotes — 隐私优先加密笔记</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- ============ 画面1：登录 ============ -->
+<div id="screen-auth" class="screen hidden">
+  <div class="card">
+    <h1>🧚 FairyNotes</h1>
+    <p class="subtitle">端到端加密 · 私有部署 · 服务器永远看不到你的笔记内容</p>
+    <label class="hint" for="server-url">私有服务器地址（APP 内必填；网页同源部署可留空）</label>
+    <input id="server-url" type="url" placeholder="https://notes.example.com">
+    <div id="google-section" class="hidden">
+      <p class="hint">使用谷歌账号登录（仅用于身份验证，与笔记加密无关）</p>
+      <div id="google-btn"></div>
+      <div class="divider">或</div>
+    </div>
+    <div id="dev-section" class="hidden">
+      <p class="hint">开发模式登录（仅限测试环境）</p>
+      <input id="dev-email" type="email" placeholder="dev@local.test">
+      <button id="dev-login-btn" class="btn">开发登录</button>
+    </div>
+    <p class="hint small">⚠️ 你的笔记由主密码加密，密钥只存在于你的设备上。忘记主密码 = 数据无法恢复。</p>
+  </div>
+</div>
+
+<!-- ============ 画面2：金库解锁 ============ -->
+<div id="screen-unlock" class="screen hidden">
+  <div class="card">
+    <h2>🔒 解锁金库</h2>
+    <p class="hint">当前账号：<span id="user-email"></span></p>
+    <input id="master-password" type="password" placeholder="主密码（用于本地派生加密密钥）">
+    <button id="unlock-btn" class="btn primary">解锁</button>
+    <p id="unlock-status" class="hint"></p>
+  </div>
+</div>
+
+<!-- ============ 画面3：工作台 ============ -->
+<div id="screen-app" class="screen hidden">
+  <div class="layout">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="brand">🧚 FairyNotes</div>
+      <button id="new-note-btn" class="btn primary full">＋ 新建笔记</button>
+      <input id="search-input" type="search" placeholder="🔍 本地搜索（明文不出设备）">
+      <div id="note-list" class="note-list"></div>
+      <div class="tabs">
+        <button id="tab-editor" class="tab active">✏️ 编辑</button>
+        <button id="tab-graph" class="tab">🕸️ 图谱</button>
+        <button id="tab-settings" class="tab">⚙️ 设置</button>
+      </div>
+      <button id="lock-btn" class="btn full">🔒 锁定金库</button>
+    </aside>
+
+    <!-- 主区域 -->
+    <main class="main">
+      <!-- 编辑视图 -->
+      <div id="view-editor">
+        <input id="note-title" placeholder="笔记标题">
+        <input id="tags-input" placeholder="标签，用逗号分隔">
+        <div id="blocks" class="blocks"></div>
+        <p class="hint small">块内 <code>Shift+Enter</code> 换行 · <code>Enter</code> 新建块 · 输入 <code>[[笔记标题]]</code> 建立双向链接</p>
+        <span id="save-status" class="save-status"></span>
+      </div>
+
+      <!-- 图谱视图 -->
+      <div id="view-graph" class="hidden">
+        <h3>知识图谱</h3>
+        <div id="graph-container"></div>
+      </div>
+
+      <!-- 设置视图 -->
+      <div id="view-settings" class="hidden">
+        <h3>⚙️ WebDAV 加密备份</h3>
+        <p class="hint">备份文件在本地加密后才上传，WebDAV 服务商与服务器都无法读取内容。</p>
+        <label>WebDAV 地址</label>
+        <input id="wd-url" placeholder="https://dav.example.com/dav/">
+        <label>用户名</label>
+        <input id="wd-user" autocomplete="off">
+        <label>密码</label>
+        <input id="wd-pass" type="password" autocomplete="off">
+        <div class="btn-row">
+          <button id="wd-save" class="btn">保存配置（仅存本机）</button>
+          <button id="wd-backup" class="btn primary">⬆️ 立即加密备份</button>
+        </div>
+        <div class="btn-row">
+          <button id="wd-list" class="btn">📂 查看云端备份列表</button>
+        </div>
+        <div id="wd-files"></div>
+        <label>恢复指定备份</label>
+        <div class="btn-row">
+          <input id="wd-restore-name" placeholder="备份文件名">
+          <button id="wd-restore" class="btn">⬇️ 恢复</button>
+        </div>
+        <p id="wd-status" class="hint"></p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

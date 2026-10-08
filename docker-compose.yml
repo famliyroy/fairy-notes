@@ -1,0 +1,34 @@
+# ============================================================
+# FairyNotes 私有部署编排
+# 用法：
+#   1. 复制 .env.example 为 .env 并填写配置
+#   2. docker compose up -d
+#   3. 访问 http://<你的服务器IP>:8080
+# ============================================================
+services:
+  fairynotes:
+    build: .
+    container_name: fairynotes
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      # 谷歌 OAuth 客户端 ID（在 https://console.cloud.google.com 创建
+      # OAuth 2.0 客户端 ID，类型选"Web 应用"，来源填你的服务器地址）。
+      # 留空则只能用开发模式登录。
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      # 开发模式登录开关。生产环境【必须】保持 0 或不设置！
+      - ALLOW_DEV_AUTH=${ALLOW_DEV_AUTH:-0}
+      # SQLite 数据库文件位置（容器内固定挂载到数据卷）
+      - DB_PATH=/data/fairy-notes.db
+    volumes:
+      - fairynotes-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  fairynotes-data:
